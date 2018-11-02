@@ -1,11 +1,14 @@
 package com.dhr.simplepushstreamutil.bean;
 
 
+import java.util.PrimitiveIterator;
+
 public class FromClientBean {
     private int type;
     private int schemeType;
     private String cmd;
-    private bilibiliLiveInfo bilibiliLiveInfo;
+    private bilibiliAccountInfo bilibiliAccountInfo;
+    private bilibiliRoomInfo bilibiliRoomInfo;
 
     public int getType() {
         return type;
@@ -31,15 +34,23 @@ public class FromClientBean {
         this.cmd = cmd;
     }
 
-    public FromClientBean.bilibiliLiveInfo getBilibiliLiveInfo() {
-        return bilibiliLiveInfo;
+    public bilibiliAccountInfo getBilibiliAccountInfo() {
+        return bilibiliAccountInfo;
     }
 
-    public void setBilibiliLiveInfo(FromClientBean.bilibiliLiveInfo bilibiliLiveInfo) {
-        this.bilibiliLiveInfo = bilibiliLiveInfo;
+    public void setBilibiliAccountInfo(bilibiliAccountInfo bilibiliAccountInfo) {
+        this.bilibiliAccountInfo = bilibiliAccountInfo;
     }
 
-    public class bilibiliLiveInfo {
+    public FromClientBean.bilibiliRoomInfo getBilibiliRoomInfo() {
+        return bilibiliRoomInfo;
+    }
+
+    public void setBilibiliRoomInfo(FromClientBean.bilibiliRoomInfo bilibiliRoomInfo) {
+        this.bilibiliRoomInfo = bilibiliRoomInfo;
+    }
+
+    public class bilibiliAccountInfo {
         private String userName;
         private String password;
 
@@ -57,6 +68,27 @@ public class FromClientBean {
 
         public void setPassword(String password) {
             this.password = password;
+        }
+    }
+
+    public class bilibiliRoomInfo {
+        private String roomName;
+        private String areaId;
+
+        public String getRoomName() {
+            return roomName;
+        }
+
+        public void setRoomName(String roomName) {
+            this.roomName = roomName;
+        }
+
+        public String getAreaId() {
+            return areaId;
+        }
+
+        public void setAreaId(String areaId) {
+            this.areaId = areaId;
         }
     }
 

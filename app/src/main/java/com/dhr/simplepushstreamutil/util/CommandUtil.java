@@ -14,6 +14,7 @@ import com.hiczp.bilibili.api.passport.entity.LoginResponseEntity;
 import com.hiczp.bilibili.api.passport.exception.CaptchaMismatchException;
 import com.hiczp.bilibili.api.web.BilibiliWebAPI;
 import com.hiczp.bilibili.api.web.live.LiveService;
+import com.hiczp.bilibili.api.web.live.entity.LiveAreaListEntity;
 import com.hiczp.bilibili.api.web.live.entity.LiveInfoEntity;
 import com.hiczp.bilibili.api.web.live.entity.StartLiveEntity;
 import com.hiczp.bilibili.api.web.live.entity.UpdateRoomTitleEntity;
@@ -22,7 +23,6 @@ import okhttp3.Cookie;
 import org.apache.mina.core.session.IoSession;
 
 import javax.security.auth.login.LoginException;
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -43,8 +43,8 @@ public class CommandUtil {
     private ExecutorService executorService;
     private SimpleDateFormat simpleDateFormat;
     private JsonUtil jsonUtil;
-    private LocalDataBean localDataBean;
 
+    private LocalDataBean localDataBean;
     private BilibiliAccount bilibiliAccount;
     private BilibiliAPI bilibiliAPI;
     private BilibiliWebAPI bilibiliWebAPI;
@@ -54,7 +54,8 @@ public class CommandUtil {
     private String csrfToken = "";
     private StartLiveEntity.DataBean.RtmpBean rtmp;
 
-    public CommandUtil() {
+    public CommandUtil(IoSession session) {
+        this.session = session;
         gson = new Gson();
         executorService = Executors.newCachedThreadPool();
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -69,8 +70,7 @@ public class CommandUtil {
         }
     }
 
-    public void getFormatList(IoSession session, FromClientBean fromClientBean) {
-        this.session = session;
+    public void getFormatList(FromClientBean fromClientBean) {
         executorService.execute(() -> {
             Runtime run = Runtime.getRuntime();
             File wd = new File("/bin");
@@ -117,8 +117,7 @@ public class CommandUtil {
         }
     };
 
-    public void getM3u8Url(IoSession session, FromClientBean fromClientBean) {
-        this.session = session;
+    public void getM3u8Url(FromClientBean fromClientBean) {
         executorService.execute(() -> {
             Runtime run = Runtime.getRuntime();
             File wd = new File("/bin");
@@ -165,8 +164,7 @@ public class CommandUtil {
     };
 
 
-    public void pushStreamToLiveRoom(IoSession session, FromClientBean fromClientBean) {
-        this.session = session;
+    public void pushStreamToLiveRoom(FromClientBean fromClientBean) {
         executorService.execute(() -> {
             Runtime run = Runtime.getRuntime();
             File wd = new File("/bin");
@@ -218,12 +216,12 @@ public class CommandUtil {
         }
     };
 
-    public void login(IoSession session, FromClientBean fromClientBean) {
+    public void login(FromClientBean fromClientBean) {
         executorService.execute(() -> {
             BilibiliAPI bilibiliAPI = new BilibiliAPI();
             try {
-                String userName = fromClientBean.getBilibiliLiveInfo().getUserName();
-                String password = fromClientBean.getBilibiliLiveInfo().getPassword();
+                String userName = fromClientBean.getBilibiliAccountInfo().getUserName();
+                String password = fromClientBean.getBilibiliAccountInfo().getPassword();
                 LoginResponseEntity loginResponseEntity = bilibiliAPI.login(userName, password);
                 int code = loginResponseEntity.getCode();
                 if (0 == code) {
@@ -259,7 +257,7 @@ public class CommandUtil {
         });
     }
 
-    public void saveLoginInfo(IoSession session, FromClientBean fromClientBean) {
+    public void saveLoginInfo(FromClientBean fromClientBean) {
         if (null == bilibiliAccount) {
             FromServerBean fromServerBean = new FromServerBean();
             fromClientBean.setType(ParseMessageUtil.TYPE_SAVELOGININFO);
@@ -277,7 +275,7 @@ public class CommandUtil {
         }
     }
 
-    public void removeLoginInfo(IoSession session, FromClientBean fromClientBean) {
+    public void removeLoginInfo() {
         bilibiliAccount = new BilibiliAccount("", "", 0L, 0L, 0L);
         localDataBean.setBilibiliAccount(bilibiliAccount);
         jsonUtil.saveDataToFile(LocalDataBean.class.getSimpleName(), gson.toJson(localDataBean));
@@ -288,33 +286,108 @@ public class CommandUtil {
         session.write(gson.toJson(fromServerBean));
     }
 
+    /**
+     * 获取分区列表
+     */
+    public void getAreaList() {
+        executorService.execute(() -> {
+            FromServerBean fromServerBean = new FromServerBean();
+            fromServerBean.setType(ParseMessageUtil.TYPE_GETAREALIST);
+            fromServerBean.setCode(1);
+            fromServerBean.setResult("\n\n开始获取分区列表信息，请稍候...");
+            session.write(gson.toJson(fromServerBean));
 
-
-    public void openLiveRoom(IoSession session, FromClientBean fromClientBean) {
-        try {
-            FromClientBean.bilibiliLiveInfo bilibiliLiveInfo = fromClientBean.getBilibiliLiveInfo();
-            roomId = bilibiliLiveInfo.getRoomId();
-            String areaId = bilibiliLiveInfo.getAreaId();
-            csrfToken = bilibiliLiveInfo.getCsrfToken();
-            StartLiveEntity startLiveEntity = liveService.startLive(roomId, "pc", areaId, csrfToken).execute().body();
-            if (null != startLiveEntity && 0 == startLiveEntity.getCode()) {
-                rtmp = startLiveEntity.getData().getRtmp();
-                //打开直播成功
-                FromServerBean fromServerBean = new FromServerBean();
-                fromServerBean.setResult("\n\n开启直播成功");
-                fromServerBean.setCode(0);
-                String s = gson.toJson(fromServerBean);
-                session.write(s);
-            } else {
-                FromServerBean fromServerBean = new FromServerBean();
-                fromServerBean.setResult("\n\n开启直播失败，请稍后再试");
-                fromServerBean.setCode(1);
-                String s = gson.toJson(fromServerBean);
-                session.write(s);
+            bilibiliAPI = new BilibiliAPI(bilibiliAccount);
+            try {
+                cookiesMap = bilibiliAPI.toCookies();
+                bilibiliWebAPI = new BilibiliWebAPI(cookiesMap);
+                liveService = bilibiliWebAPI.getLiveService();
+                LiveAreaListEntity liveAreaListEntity = liveService.getLiveAreaList().execute().body();
+                if (null != liveAreaListEntity && 0 == liveAreaListEntity.getCode()) {
+                    fromServerBean = new FromServerBean();
+                    fromServerBean.setType(ParseMessageUtil.TYPE_GETAREALIST);
+                    fromServerBean.setCode(1);
+                    fromServerBean.setResult("\n\n获取分区列表信息成功");
+                    session.write(gson.toJson(fromServerBean));
+                    fromServerBean = new FromServerBean();
+                    fromServerBean.setType(ParseMessageUtil.TYPE_GETAREALIST);
+                    fromServerBean.setCode(0);
+                    fromServerBean.setResult(gson.toJson(liveAreaListEntity.getData()));
+                    session.write(gson.toJson(fromServerBean));
+                } else {
+                    fromServerBean = new FromServerBean();
+                    fromServerBean.setType(ParseMessageUtil.TYPE_GETAREALIST);
+                    fromServerBean.setCode(1);
+                    fromServerBean.setResult("\n\n获取分区列表失败，请稍后再试");
+                    session.write(gson.toJson(fromServerBean));
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        });
+    }
+
+
+    public void updateTitleAndOpenLiveRoom(FromClientBean fromClientBean) {
+        executorService.execute(() -> {
+            try {
+                FromServerBean fromServerBean = new FromServerBean();
+                fromServerBean.setType(ParseMessageUtil.TYPE_UPDATETITLEANDOPENLIVEROOM);
+                fromServerBean.setCode(1);
+                fromServerBean.setResult("\n\n开始获取开启直播相关参数，请稍候...");
+                session.write(gson.toJson(fromServerBean));
+                LiveInfoEntity liveInfoEntity = liveService.getLiveInfo().execute().body();
+                if (null != liveInfoEntity && 0 == liveInfoEntity.getCode()) {
+                    roomId = liveInfoEntity.getData().getRoomid();
+                    List<Cookie> cookies = cookiesMap.get("bilibili.com");
+                    for (Cookie cookie : cookies) {
+                        if ("bili_jct".equals(cookie.name())) {
+                            csrfToken = cookie.value();
+                            break;
+                        }
+                    }
+                    fromServerBean = new FromServerBean();
+                    fromServerBean.setType(ParseMessageUtil.TYPE_UPDATETITLEANDOPENLIVEROOM);
+                    fromServerBean.setCode(1);
+                    fromServerBean.setResult("\n\n获取开启直播参数成功，开始修改房间标题...");
+                    session.write(gson.toJson(fromServerBean));
+                    UpdateRoomTitleEntity updateRoomTitleEntity = liveService.updateRoomTitle(
+                            roomId, fromClientBean.getBilibiliRoomInfo().getRoomName(), csrfToken).execute().body();
+                    if (null != updateRoomTitleEntity && 0 == updateRoomTitleEntity.getCode()) {
+                        fromServerBean = new FromServerBean();
+                        fromServerBean.setType(ParseMessageUtil.TYPE_UPDATETITLEANDOPENLIVEROOM);
+                        fromServerBean.setCode(1);
+                        fromServerBean.setResult("\n\n修改房间标题成功，正在开启直播...");
+                        session.write(gson.toJson(fromServerBean));
+                        StartLiveEntity startLiveEntity = liveService.startLive(
+                                roomId, "pc", fromClientBean.getBilibiliRoomInfo().getAreaId(), csrfToken).execute().body();
+                        if (null != startLiveEntity && 0 == startLiveEntity.getCode()) {
+                            fromServerBean = new FromServerBean();
+                            fromServerBean.setType(ParseMessageUtil.TYPE_UPDATETITLEANDOPENLIVEROOM);
+                            fromServerBean.setCode(0);
+                            fromServerBean.setResult("\n\n开启直播成功");
+                            session.write(gson.toJson(fromServerBean));
+                            rtmp = startLiveEntity.getData().getRtmp();
+                            //打开直播成功
+                        } else {
+                            fromServerBean = new FromServerBean();
+                            fromServerBean.setType(ParseMessageUtil.TYPE_UPDATETITLEANDOPENLIVEROOM);
+                            fromServerBean.setCode(1);
+                            fromServerBean.setResult("\n\n开启直播失败，请稍后再试");
+                            session.write(gson.toJson(fromServerBean));
+                        }
+                    } else {
+                        fromServerBean = new FromServerBean();
+                        fromServerBean.setType(ParseMessageUtil.TYPE_UPDATETITLEANDOPENLIVEROOM);
+                        fromServerBean.setCode(1);
+                        fromServerBean.setResult("\n\n更新房间标题失败，请稍后再试");
+                        session.write(gson.toJson(fromServerBean));
+                    }
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
 

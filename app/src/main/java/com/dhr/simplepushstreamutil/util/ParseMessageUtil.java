@@ -12,13 +12,14 @@ public class ParseMessageUtil {
     public static final int TYPE_LOGIN = 4;
     public static final int TYPE_SAVELOGININFO = 5;
     public static final int TYPE_REMOVELOGININFO = 6;
-    public static final int TYPE_OPENLIVEROOM = 9;
+    public static final int TYPE_GETAREALIST = 7;
+    public static final int TYPE_UPDATETITLEANDOPENLIVEROOM = 8;
     private Gson gson;
     private CommandUtil commandUtil;
 
-    public ParseMessageUtil() {
+    public ParseMessageUtil(IoSession session) {
         gson = new Gson();
-        commandUtil = new CommandUtil();
+        commandUtil = new CommandUtil(session);
     }
 
     /**
@@ -26,30 +27,33 @@ public class ParseMessageUtil {
      *
      * @param message
      */
-    public void parse(IoSession session, String message) {
+    public void parse(String message) {
         if (!StringUtil.isNullOrEmpty(message)) {
             FromClientBean fromClientBean = gson.fromJson(message, FromClientBean.class);
             switch (fromClientBean.getType()) {
                 case TYPE_GETFORMATLIST:
-                    commandUtil.getFormatList(session, fromClientBean);
+                    commandUtil.getFormatList(fromClientBean);
                     break;
                 case TYPE_GETM3U8:
-                    commandUtil.getM3u8Url(session, fromClientBean);
+                    commandUtil.getM3u8Url(fromClientBean);
                     break;
                 case TYPE_PUSHSTREAMTOLIVEROOM:
-                    commandUtil.pushStreamToLiveRoom(session, fromClientBean);
+                    commandUtil.pushStreamToLiveRoom(fromClientBean);
                     break;
                 case TYPE_LOGIN:
-                    commandUtil.login(session, fromClientBean);
+                    commandUtil.login(fromClientBean);
                     break;
                 case TYPE_SAVELOGININFO:
-                    commandUtil.saveLoginInfo(session, fromClientBean);
+                    commandUtil.saveLoginInfo(fromClientBean);
                     break;
                 case TYPE_REMOVELOGININFO:
-                    commandUtil.removeLoginInfo(session, fromClientBean);
+                    commandUtil.removeLoginInfo();
                     break;
-                case TYPE_OPENLIVEROOM:
-                    commandUtil.openLiveRoom(session, fromClientBean);
+                case TYPE_GETAREALIST:
+                    commandUtil.getAreaList();
+                    break;
+                case TYPE_UPDATETITLEANDOPENLIVEROOM:
+                    commandUtil.updateTitleAndOpenLiveRoom(fromClientBean);
                     break;
             }
         }

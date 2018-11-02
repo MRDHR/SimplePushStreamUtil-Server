@@ -12,7 +12,12 @@ public class ServerHandler extends IoHandlerAdapter {
     private ParseMessageUtil parseMessageUtil;
 
     ServerHandler() {
-        parseMessageUtil = new ParseMessageUtil();
+    }
+
+    @Override
+    public void sessionOpened(IoSession session) throws Exception {
+        super.sessionOpened(session);
+        parseMessageUtil = new ParseMessageUtil(session);
     }
 
     @Override
@@ -35,7 +40,7 @@ public class ServerHandler extends IoHandlerAdapter {
             return;
         }
         System.out.println("服务器接收到的数据：" + str);
-        parseMessageUtil.parse(session, str);
+        parseMessageUtil.parse(str);
     }
 
     @Override
