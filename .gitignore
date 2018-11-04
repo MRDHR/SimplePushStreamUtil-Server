@@ -8,5 +8,6 @@
 local.properties
 *.iml
 classes
+LocalDataBean.json
 out
 gen

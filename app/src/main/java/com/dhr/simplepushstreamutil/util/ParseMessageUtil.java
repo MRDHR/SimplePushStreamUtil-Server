@@ -21,12 +21,10 @@ public class ParseMessageUtil {
     public static final int TYPE_TOMYLIVEROOM = 11;
     public static final int TYPE_LIVEROOMISOPEN = 12;
     public static final int TYPE_STOPPUSHSTREAM = 13;
-    private Gson gson;
     private CommandUtil commandUtil;
 
-    public ParseMessageUtil(IoSession session) {
-        gson = new Gson();
-        commandUtil = new CommandUtil(session);
+    public ParseMessageUtil() {
+        commandUtil = new CommandUtil();
     }
 
     /**
@@ -78,6 +76,20 @@ public class ParseMessageUtil {
                     break;
             }
         }
+    }
+
+    /**
+     * 解析数据并分发操作
+     *
+     * @param fromClientBean
+     */
+    public void parse(IoSession session, FromClientBean fromClientBean) {
+        commandUtil.updateSession(session);
+        parse(fromClientBean);
+    }
+
+    public void updateSession(IoSession session) {
+        commandUtil.updateSession(session);
     }
 
 }

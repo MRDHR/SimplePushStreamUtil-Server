@@ -50,8 +50,7 @@ public class CommandUtil {
     private String csrfToken = "";
     private StartLiveEntity.DataBean.RtmpBean rtmp;
 
-    public CommandUtil(IoSession session) {
-        this.session = session;
+    public CommandUtil(){
         gson = new Gson();
         executorService = Executors.newCachedThreadPool();
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -64,6 +63,10 @@ public class CommandUtil {
         } else {
             localDataBean = gson.fromJson(localData, LocalDataBean.class);
         }
+    }
+
+    public void updateSession(IoSession session){
+        this.session = session;
     }
 
     /**
@@ -418,7 +421,7 @@ public class CommandUtil {
 
 
     public void openLiveRoom() {
-        BilibiliAccount bilibiliAccount = localDataBean.getBilibiliAccount();
+        bilibiliAccount = localDataBean.getBilibiliAccount();
         if (null == bilibiliAccount || null == bilibiliAccount.getAccessToken() || bilibiliAccount.getAccessToken().isEmpty()) {
             FromServerBean fromServerBean = new FromServerBean();
             fromServerBean.setType(ParseMessageUtil.TYPE_OPENLIVEROOM);
