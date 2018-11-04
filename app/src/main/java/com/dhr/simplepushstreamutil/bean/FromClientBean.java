@@ -1,14 +1,16 @@
 package com.dhr.simplepushstreamutil.bean;
 
 
-import java.util.PrimitiveIterator;
+import java.io.Serializable;
 
-public class FromClientBean {
+public class FromClientBean implements Serializable {
     private int type;
     private int schemeType;
     private String cmd;
-    private bilibiliAccountInfo bilibiliAccountInfo;
-    private bilibiliRoomInfo bilibiliRoomInfo;
+    private String userName;
+    private String password;
+    private String roomName;
+    private String areaId;
 
     public int getType() {
         return type;
@@ -34,62 +36,35 @@ public class FromClientBean {
         this.cmd = cmd;
     }
 
-    public bilibiliAccountInfo getBilibiliAccountInfo() {
-        return bilibiliAccountInfo;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setBilibiliAccountInfo(bilibiliAccountInfo bilibiliAccountInfo) {
-        this.bilibiliAccountInfo = bilibiliAccountInfo;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
-    public FromClientBean.bilibiliRoomInfo getBilibiliRoomInfo() {
-        return bilibiliRoomInfo;
+    public String getPassword() {
+        return password;
     }
 
-    public void setBilibiliRoomInfo(FromClientBean.bilibiliRoomInfo bilibiliRoomInfo) {
-        this.bilibiliRoomInfo = bilibiliRoomInfo;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
-    public class bilibiliAccountInfo {
-        private String userName;
-        private String password;
-
-        public String getUserName() {
-            return userName;
-        }
-
-        public void setUserName(String userName) {
-            this.userName = userName;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
+    public String getRoomName() {
+        return roomName;
     }
 
-    public class bilibiliRoomInfo {
-        private String roomName;
-        private String areaId;
-
-        public String getRoomName() {
-            return roomName;
-        }
-
-        public void setRoomName(String roomName) {
-            this.roomName = roomName;
-        }
-
-        public String getAreaId() {
-            return areaId;
-        }
-
-        public void setAreaId(String areaId) {
-            this.areaId = areaId;
-        }
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
     }
 
+    public String getAreaId() {
+        return areaId;
+    }
+
+    public void setAreaId(String areaId) {
+        this.areaId = areaId;
+    }
 }

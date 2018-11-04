@@ -1,6 +1,8 @@
 package com.dhr.simplepushstreamutil.bean;
 
-public class FromServerBean {
+import java.io.Serializable;
+
+public class FromServerBean implements Serializable {
     private int type;
     private int code;
     private String result;

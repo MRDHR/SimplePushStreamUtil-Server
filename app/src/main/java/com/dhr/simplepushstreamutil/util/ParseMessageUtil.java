@@ -1,11 +1,13 @@
 package com.dhr.simplepushstreamutil.util;
 
 import com.dhr.simplepushstreamutil.bean.FromClientBean;
+import com.dhr.simplepushstreamutil.bean.FromServerBean;
 import com.google.gson.Gson;
 import io.netty.util.internal.StringUtil;
 import org.apache.mina.core.session.IoSession;
 
 public class ParseMessageUtil {
+    public static final int TYPE_OPENPORT = 0;
     public static final int TYPE_GETFORMATLIST = 1;
     public static final int TYPE_GETM3U8 = 2;
     public static final int TYPE_PUSHSTREAMTOLIVEROOM = 3;
@@ -14,6 +16,11 @@ public class ParseMessageUtil {
     public static final int TYPE_REMOVELOGININFO = 6;
     public static final int TYPE_GETAREALIST = 7;
     public static final int TYPE_UPDATETITLEANDOPENLIVEROOM = 8;
+    public static final int TYPE_OPENLIVEROOM = 9;
+    public static final int TYPE_CLOSELIVEROOM = 10;
+    public static final int TYPE_TOMYLIVEROOM = 11;
+    public static final int TYPE_LIVEROOMISOPEN = 12;
+    public static final int TYPE_STOPPUSHSTREAM = 13;
     private Gson gson;
     private CommandUtil commandUtil;
 
@@ -25,12 +32,14 @@ public class ParseMessageUtil {
     /**
      * 解析数据并分发操作
      *
-     * @param message
+     * @param fromClientBean
      */
-    public void parse(String message) {
-        if (!StringUtil.isNullOrEmpty(message)) {
-            FromClientBean fromClientBean = gson.fromJson(message, FromClientBean.class);
+    public void parse(FromClientBean fromClientBean) {
+        if (null != fromClientBean) {
             switch (fromClientBean.getType()) {
+                case TYPE_OPENPORT:
+                    commandUtil.openPort();
+                    break;
                 case TYPE_GETFORMATLIST:
                     commandUtil.getFormatList(fromClientBean);
                     break;
@@ -49,11 +58,23 @@ public class ParseMessageUtil {
                 case TYPE_REMOVELOGININFO:
                     commandUtil.removeLoginInfo();
                     break;
-                case TYPE_GETAREALIST:
-                    commandUtil.getAreaList();
-                    break;
                 case TYPE_UPDATETITLEANDOPENLIVEROOM:
                     commandUtil.updateTitleAndOpenLiveRoom(fromClientBean);
+                    break;
+                case TYPE_OPENLIVEROOM:
+                    commandUtil.openLiveRoom();
+                    break;
+                case TYPE_CLOSELIVEROOM:
+                    commandUtil.closeLiveRoom();
+                    break;
+                case TYPE_TOMYLIVEROOM:
+                    commandUtil.toLiveRoom();
+                    break;
+                case TYPE_LIVEROOMISOPEN:
+                    commandUtil.liveRoomIsOpen();
+                    break;
+                case TYPE_STOPPUSHSTREAM:
+                    commandUtil.stopPushStream(fromClientBean);
                     break;
             }
         }

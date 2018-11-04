@@ -1,6 +1,8 @@
 package com.dhr.simplepushstreamutil.bean;
 
-public class ResolutionBean {
+import java.io.Serializable;
+
+public class ResolutionBean implements Serializable {
     private String resolutionNo;
     private String resolutionPx;
     private String fps;

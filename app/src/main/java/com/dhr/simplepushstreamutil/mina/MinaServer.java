@@ -1,9 +1,11 @@
 package com.dhr.simplepushstreamutil.mina;
 
 
+import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoEventType;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
@@ -23,18 +25,19 @@ public class MinaServer {
     /**
      * 监听的端口
      */
-    private static final int PORT = 9123;
+    public static final int PORT = 9123;
     private static final Logger LOG = Logger.getLogger("system");
 
     private static void start() throws IOException {
-
         LOG.info("[##########业务服务器监听初始化中......##########]");
         //创建一个非阻塞的server端的Socket来接受请求,执行读写操作的线程数设置为CPU核心数量+1
         NioSocketAcceptor acceptor = new NioSocketAcceptor(Runtime.getRuntime().availableProcessors() * 2);
         //设置编码解码器
-        // 设置编码过滤器(文本文件)
-        acceptor.getFilterChain().addLast("codec",
-                new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
+        //创建接收数据的过滤器
+        DefaultIoFilterChainBuilder chain = acceptor.getFilterChain();
+        //设定这个过滤器将以对象为单位读取数据
+        ProtocolCodecFilter filter= new ProtocolCodecFilter(new ObjectSerializationCodecFactory());
+        chain.addLast("objectFilter",filter);
 
         //设置Message received处理线程
         ExecutorService executor = Executors.newFixedThreadPool(50);
