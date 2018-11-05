@@ -63,6 +63,7 @@ public class MinaServer {
             LOG.info("[##########业务服务器监听已启动,ON PORT:" + PORT + "##########]");
             acceptor.isActive();
         } catch (IOException e) {
+            e.printStackTrace();
             LOG.info("业务服务器监听程序启动失败");
         }
     }

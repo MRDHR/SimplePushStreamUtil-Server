@@ -82,8 +82,8 @@ public class CommandUtil {
                     stdin = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), "GBK"), true);
                     new Thread(new OpenPortRunnable(process.getErrorStream())).start();
                     new Thread(new OpenPortRunnable(process.getInputStream())).start();
-                    stdin.println("firewall-cmd --add-port=" + MinaServer.PORT + "/tcp --permanent");
-                    stdin.println("firewall-cmd --reload");
+                    stdin.println("sudo firewall-cmd --add-port=" + MinaServer.PORT + "/tcp --permanent");
+                    stdin.println("sudo firewall-cmd --reload");
                     stdin.close();
                 }
             } catch (IOException e) {
