@@ -49,8 +49,9 @@ public class CommandUtil {
     private String roomId;
     private String csrfToken = "";
     private StartLiveEntity.DataBean.RtmpBean rtmp;
+    private String liveRoomUrl;
 
-    public CommandUtil(){
+    public CommandUtil() {
         gson = new Gson();
         executorService = Executors.newCachedThreadPool();
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -65,7 +66,7 @@ public class CommandUtil {
         }
     }
 
-    public void updateSession(IoSession session){
+    public void updateSession(IoSession session) {
         this.session = session;
     }
 
@@ -481,7 +482,7 @@ public class CommandUtil {
     }
 
     public void liveRoomIsOpen() {
-        String liveRoomUrl = rtmp.getAddr() + rtmp.getCode();
+        liveRoomUrl = rtmp.getAddr() + rtmp.getCode();
         FromServerBean fromServerBean = new FromServerBean();
         fromServerBean.setType(ParseMessageUtil.TYPE_LIVEROOMISOPEN);
         if (liveRoomUrl.isEmpty()) {
@@ -496,19 +497,27 @@ public class CommandUtil {
 
     public void stopPushStream(FromClientBean fromClientBean) {
         executorService.execute(() -> {
-            Runtime run = Runtime.getRuntime();
-            File wd = new File("/bin");
-            try {
-                process = run.exec("/bin/bash", null, wd);
-                if (null != process) {
-                    stdin = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), "GBK"), true);
-                    new Thread(new FindFfmpegRunnable(process.getErrorStream(), findFfmpegCallBack)).start();
-                    new Thread(new FindFfmpegRunnable(process.getInputStream(), findFfmpegCallBack)).start();
-                    stdin.println(fromClientBean.getCmd());
-                    stdin.close();
+            if (!StringUtil.isNullOrEmpty(liveRoomUrl)) {
+                Runtime run = Runtime.getRuntime();
+                File wd = new File("/bin");
+                try {
+                    process = run.exec("/bin/bash", null, wd);
+                    if (null != process) {
+                        stdin = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), "GBK"), true);
+                        new Thread(new FindFfmpegRunnable(process.getErrorStream(), findFfmpegCallBack)).start();
+                        new Thread(new FindFfmpegRunnable(process.getInputStream(), findFfmpegCallBack)).start();
+                        stdin.println("ps -aux|grep " + "\"" + liveRoomUrl + "\"" + "| grep -v grep | awk '{print $2}'");
+                        stdin.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            } else {
+                FromServerBean fromServerBean = new FromServerBean();
+                fromServerBean.setType(ParseMessageUtil.TYPE_STOPPUSHSTREAM);
+                fromServerBean.setCode(0);
+                fromServerBean.setResult("\n\n直播间地址为空，无需结束");
+                session.write(fromServerBean);
             }
         });
     }
