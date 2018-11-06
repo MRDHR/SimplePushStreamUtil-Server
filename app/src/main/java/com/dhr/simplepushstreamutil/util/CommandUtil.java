@@ -482,10 +482,12 @@ public class CommandUtil {
     }
 
     public void liveRoomIsOpen() {
-        liveRoomUrl = rtmp.getAddr() + rtmp.getCode();
+        if (null != rtmp) {
+            liveRoomUrl = rtmp.getAddr() + rtmp.getCode();
+        }
         FromServerBean fromServerBean = new FromServerBean();
         fromServerBean.setType(ParseMessageUtil.TYPE_LIVEROOMISOPEN);
-        if (liveRoomUrl.isEmpty()) {
+        if (StringUtil.isNullOrEmpty(liveRoomUrl)) {
             fromServerBean.setCode(1);
             fromServerBean.setResult("请先打开直播间");
         } else {
@@ -536,6 +538,7 @@ public class CommandUtil {
                         new Thread(new KillFfmpegRunnable(process.getInputStream())).start();
                         stdin.println("kill -9 " + str);
                         stdin.close();
+                        liveRoomUrl = null;
                         FromServerBean fromServerBean = new FromServerBean();
                         fromServerBean.setType(ParseMessageUtil.TYPE_STOPPUSHSTREAM);
                         fromServerBean.setCode(0);
