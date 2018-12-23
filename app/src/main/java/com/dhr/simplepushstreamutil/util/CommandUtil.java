@@ -536,7 +536,7 @@ public class CommandUtil {
                         stdin = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), "GBK"), true);
                         new Thread(new KillFfmpegRunnable(process.getErrorStream())).start();
                         new Thread(new KillFfmpegRunnable(process.getInputStream())).start();
-                        stdin.println("kill -9 " + str);
+                        stdin.println("kill " + str);
                         stdin.close();
                         liveRoomUrl = null;
                         FromServerBean fromServerBean = new FromServerBean();
